@@ -7,19 +7,44 @@ const Lobby = () => {
   const [selectedCharacter, setSelectedCharacter] = useState('warrior');
 
   const handleConnectWallet = async () => {
-    const address = await connectWallet();
-    setWalletAddress(address);
+    try {
+      const address = await connectWallet();
+      setWalletAddress(address);
+    } catch (error) {
+      console.error("Wallet connection failed:", error);
+      alert("⚠️ Wallet connection failed. Please try again.");
+    }
   };
 
   const handleStartGame = async () => {
-    const matchId = await createMatch(selectedCharacter);
-    const link = `${window.location.origin}/match/${matchId}`;
-    setMatchLink(link);
+    if (!walletAddress) {
+      alert("🔗 Please connect your wallet first.");
+      return;
+    }
+    try {
+      const matchId = await createMatch(selectedCharacter);
+      const link = `${window.location.origin}/match/${matchId}`;
+      setMatchLink(link);
+    } catch (error) {
+      console.error("Error starting game:", error);
+      alert("⚠️ Failed to start game. Try again later.");
+    }
   };
 
   const handleJoinGame = async () => {
-    const matchId = prompt("Enter Match ID to Join:");
-    await joinMatch(matchId, selectedCharacter);
+    if (!walletAddress) {
+      alert("🔗 Please connect your wallet first.");
+      return;
+    }
+    const matchId = prompt("🔢 Enter Match ID to Join:");
+    if (!matchId) return;
+
+    try {
+      await joinMatch(matchId, selectedCharacter);
+    } catch (error) {
+      console.error("Error joining match:", error);
+      alert("⚠️ Could not join the match. Check the ID and try again.");
+    }
   };
 
   return (
@@ -27,7 +52,7 @@ const Lobby = () => {
       <h2>🔥 Welcome to Meta Battle!</h2>
 
       <button onClick={handleConnectWallet}>
-        {walletAddress ? `Connected: ${walletAddress}` : '🔗 Connect Wallet'}
+        {walletAddress ? `✅ Connected: ${walletAddress}` : '🔗 Connect Wallet'}
       </button>
 
       <div className="character-select">
